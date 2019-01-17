@@ -267,12 +267,13 @@ func dogstatdSink(cfg TelemetryConfig, hostname string) (metrics.MetricSink, err
 	return sink, nil
 }
 
-func prometheusSink(cfg TelemetryConfig, hostname string) (metrics.MetricSink, error) {
+func prometheusSink(cfg TelemetryConfig, hostname string, reg prometheus.Registerer, labels prometheus.Labels) (metrics.MetricSink, error) {
 	if cfg.PrometheusRetentionTime.Nanoseconds() < 1 {
 		return nil, nil
 	}
 	prometheusOpts := prometheus.PrometheusOpts{
 		Expiration: cfg.PrometheusRetentionTime,
+        wreg: prometheus.WrapRegistererWith(reg, labels)
 	}
 	sink, err := prometheus.NewPrometheusSinkFrom(prometheusOpts)
 	if err != nil {
