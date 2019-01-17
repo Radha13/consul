@@ -8,6 +8,7 @@ import (
 	"github.com/armon/go-metrics/circonus"
 	"github.com/armon/go-metrics/datadog"
 	"github.com/armon/go-metrics/prometheus"
+	prom "github.com/prometheus/client_golang/prometheus"
 )
 
 // TelemetryConfig is embedded in config.RuntimeConfig and holds the
@@ -267,13 +268,13 @@ func dogstatdSink(cfg TelemetryConfig, hostname string) (metrics.MetricSink, err
 	return sink, nil
 }
 
-func prometheusSink(cfg TelemetryConfig, hostname string, reg prometheus.Registerer, labels prometheus.Labels) (metrics.MetricSink, error) {
+func prometheusSink(cfg TelemetryConfig, hostname string, reg prom.Registerer, labels prom.Labels) (metrics.MetricSink, error) {
 	if cfg.PrometheusRetentionTime.Nanoseconds() < 1 {
 		return nil, nil
 	}
 	prometheusOpts := prometheus.PrometheusOpts{
 		Expiration: cfg.PrometheusRetentionTime,
-        wreg: prometheus.WrapRegistererWith(reg, labels)
+        Registerer: prom.WrapRegistererWith(reg, labels),
 	}
 	sink, err := prometheus.NewPrometheusSinkFrom(prometheusOpts)
 	if err != nil {
